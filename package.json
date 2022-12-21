@@ -1,0 +1,36 @@
+{
+	"name": "paybk_wallet",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"scripts": {
+		"dev": "nodemon server.ts"
+	},
+	"devDependencies": {
+		"@types/express": "^4.17.15",
+		"@types/node": "^18.11.17",
+		"@typescript-eslint/eslint-plugin": "^5.0.0",
+		"eslint": "^8.0.1",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-config-standard-with-typescript": "^24.0.0",
+		"eslint-plugin-import": "^2.25.2",
+		"eslint-plugin-n": "^15.0.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"eslint-plugin-promise": "^6.0.0",
+		"prettier": "^2.8.1",
+		"ts-node": "^10.9.1",
+		"typescript": "*"
+	},
+	"dependencies": {
+		"bcrypt": "^5.1.0",
+		"class-transformer": "^0.5.1",
+		"class-validator": "^0.14.0",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.3",
+		"express": "^4.18.2",
+		"jsonwebtoken": "^8.5.1",
+		"reflect-metadata": "^0.1.13",
+		"routing-controllers": "0.9.0",
+		"typedi": "0.8.0"
+	}
+}
