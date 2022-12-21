@@ -1,9 +1,9 @@
-import { Get, JsonController } from 'routing-controllers';
+import { Get, JsonController, Post } from 'routing-controllers';
 
 @JsonController('/')
-export default class IndexController {
-	@Get('/')
-	async getCategories() {
+export default class AuthController {
+	@Post('/register')
+	async register() {
 		return 'categories';
 	}
 }
