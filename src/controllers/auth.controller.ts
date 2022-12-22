@@ -1,4 +1,5 @@
-import { Get, JsonController, Post } from 'routing-controllers';
+import { Body, Get, JsonController, Post } from 'routing-controllers';
+import { RegisterDto } from '../dto/auth/register.dto';
 import AuthService from '../services/auth.service';
 
 @JsonController('/')
@@ -9,9 +10,8 @@ export default class AuthController {
 	} */
 	constructor(private readonly authService: AuthService) {}
 
-	@Get('register')
-	async register() {
-		return await this.authService.register();
-		return 3;
+	@Post('register')
+	async register(@Body() registerData: RegisterDto) {
+		return await this.authService.register(registerData);
 	}
 }
