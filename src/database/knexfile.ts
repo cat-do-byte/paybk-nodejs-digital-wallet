@@ -1,7 +1,8 @@
 import path from 'path';
 import config from '../configuration';
+import { IKnexConfig } from '../interfaces/knexEnv.interface';
 
-module.exports = {
+const knexConfig: IKnexConfig = {
 	development: {
 		client: config.database.client,
 		connection: {
@@ -35,3 +36,5 @@ module.exports = {
 		},
 	},
 };
+
+export default knexConfig;

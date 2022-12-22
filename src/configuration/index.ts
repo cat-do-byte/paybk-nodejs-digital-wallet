@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { IConfigEnv } from '../interfaces/knexEnv.interface';
+
 dotenv.config({ path: path.join(__dirname, '..', '..', '/.env') });
 
 import {
@@ -51,13 +53,17 @@ class Config {
 	@IsNumber()
 	port: number = 8000;
 
+	@IsString()
+	env: IConfigEnv;
+
 	constructor(params: Config) {
 		Object.assign(this, params);
 		this.database = new DatabaseConfig(params.database);
 	}
 }
 
-const { DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, PORT } = process.env;
+const { DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, PORT, NODE_ENV } =
+	process.env;
 
 const configOptions: Config = {
 	database: {
@@ -69,6 +75,7 @@ const configOptions: Config = {
 		client: 'postgres',
 	},
 	port: Number(PORT),
+	env: (NODE_ENV as IConfigEnv) || IConfigEnv.DEVELOPMENT,
 };
 
 const config: Config = new Config(configOptions);
