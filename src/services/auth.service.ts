@@ -1,6 +1,7 @@
 import { ModelClass } from 'objection';
 import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
+import { eventEmitter, Events } from '../common/event';
 import { RegisterDto } from '../dto/auth/register.dto';
 import User from '../models/user.model';
 import { UserRepository } from '../respository/user.repository';
@@ -13,7 +14,6 @@ export default class AuthService {
 	async register(registerData: RegisterDto): Promise<User> {
 		const { username, email } = registerData;
 
-		const users = await this.userModel.query().findById(4);
 		// check exist
 		const user = await this.userModel.query().where({ username }).orWhere({ email }).first();
 		if (user) {
@@ -22,6 +22,8 @@ export default class AuthService {
 
 		// create user
 		const newUser = await this.userModel.query().insert(registerData);
+
+		eventEmitter.emit(Events.USER_REGISTRATION, { email: newUser.email });
 		// send email
 		return newUser;
 		//

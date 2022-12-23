@@ -12,9 +12,12 @@ export class HandleErrorResponse implements ExpressErrorMiddlewareInterface {
       if (error.errors)
         errorMsg = Object.values(error.errors[0]["constraints"])[0] */
 			let errorMsg = error.message;
-			response.status(error.status || 400).json({
+			const statusCode = error.status || 400;
+			response.status(statusCode).json({
 				success: false,
+				status: statusCode,
 				message: errorMsg,
+				path: request.path,
 				errors: error.errors,
 			});
 		}
