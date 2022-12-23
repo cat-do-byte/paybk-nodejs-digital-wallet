@@ -1,16 +1,46 @@
-import { Service } from 'typedi';
-import { eventEmitter, Events } from '../common/event';
+import nodemailer from 'nodemailer';
 
-@Service()
+interface IEmailOption {
+	to: string;
+	subject: string;
+	contentText: string;
+	contentHtml?: string;
+}
 export default class EmailService {
+	private transporter: nodemailer.Transporter;
+
 	constructor() {
-		console.log('fjksdjfksdjlk');
-		this.initializeEventListeners();
+		// better change this information
+
+		this.transporter = nodemailer.createTransport({
+			host: 'smtp.ethereal.email',
+			port: 587,
+			secure: false,
+			auth: {
+				user: 'broderick.greenholt@ethereal.email',
+				pass: 'pUkHJqxzYAJsGnwg3S',
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+		});
 	}
 
-	private initializeEventListeners(): void {
-		eventEmitter.on(Events.USER_REGISTRATION, ({ email }) => {
-			console.log(email, 'email maillll::');
-		});
+	async send(emailOptions: IEmailOption): Promise<void> {
+		const { to, subject, contentText, contentHtml } = emailOptions;
+		const mainOptions = {
+			from: 'PayBk Wallet',
+			to: to,
+			subject: subject,
+			text: contentText,
+			html: contentHtml,
+		};
+
+		try {
+			const result = await this.transporter.sendMail(mainOptions);
+		} catch (err) {
+			// handle process error send mail
+			console.log(err);
+		}
 	}
 }

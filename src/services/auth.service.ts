@@ -21,8 +21,6 @@ export default class AuthService {
 		// check exist
 		const user = await this.userModel.query().where({ username }).orWhere({ email }).first();
 
-		this.emailQueue.addRegisterUser({ email: 'tinti' });
-		return user;
 		if (user) {
 			throw new HttpError(400, `User is existed`);
 		}
@@ -30,7 +28,7 @@ export default class AuthService {
 		// create user
 		const newUser = await this.userModel.query().insert(registerData);
 
-		eventEmitter.emit(Events.USER_REGISTRATION, { email: newUser.email });
+		this.emailQueue.addRegisterUser({ email: newUser.email });
 		// send email
 		return newUser;
 		//

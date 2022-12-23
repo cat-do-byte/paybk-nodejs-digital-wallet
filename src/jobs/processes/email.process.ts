@@ -1,31 +1,16 @@
 import { Job } from 'bull';
 import { IQueueEmail } from '../../interfaces/queues/emailQueue.interface';
+import EmailService from '../../services/email.service';
 
 const emailProcess = async (job: Job<IQueueEmail>) => {
-	console.log('processs + ', job.data);
-	/* let testAccount = await nodemailer.createTestAccount();
+	const { email } = job.data;
+	const emailService = new EmailService();
 
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: testAccount.user, // generated ethereal user
-            pass: testAccount.pass, // generated ethereal password
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
-
-    // send mail with defined transport object
-    let info = await transporter.sendMail(job.data);
-
-    console.log("Message sent: %s", info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-    return nodemailer.getTestMessageUrl(info); */
+	emailService.send({
+		to: email,
+		subject: 'Register success',
+		contentText: 'Your registration is successful',
+	});
 };
 
 export default emailProcess;
