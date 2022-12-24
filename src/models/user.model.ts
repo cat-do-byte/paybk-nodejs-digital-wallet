@@ -55,7 +55,7 @@ export default class User extends BaseModel {
 	static relationMappings = () => ({
 		wallet: {
 			relation: Model.HasOneRelation,
-			modelClass: 'wallet.model',
+			modelClass: Wallet,
 			join: {
 				from: 'users.id',
 				to: 'wallets.userId',

@@ -1,6 +1,6 @@
 import { Model, snakeCaseMappers } from 'objection';
 import { BaseModel } from './base.model';
-import User from './user.model';
+// import User from './user.model';
 
 export default class Wallet extends BaseModel {
 	userId: number;
@@ -30,7 +30,7 @@ export default class Wallet extends BaseModel {
 	}
 
 	static relationMappings = () => ({
-		user: {
+		/* user: {
 			relation: Model.BelongsToOneRelation,
 			modelClass: User,
 
@@ -38,6 +38,6 @@ export default class Wallet extends BaseModel {
 				from: 'wallets.userId',
 				to: 'users.id',
 			},
-		},
+		}, */
 	});
 }
