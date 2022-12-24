@@ -1,10 +1,15 @@
+import crypto from 'crypto';
 import { Model, snakeCaseMappers } from 'objection';
 import { omit } from '../utils';
 
 export class BaseModel extends Model {
-	id!: number;
+	id!: string;
 	createdAt?: Date;
 	updatedAt?: Date;
+
+	static get modelPaths() {
+		return [__dirname];
+	}
 
 	hiddens(): string[] {
 		return [];
@@ -19,7 +24,10 @@ export class BaseModel extends Model {
 		return omit(json, hiddens);
 	}
 
-	$beforeInsert() {
+	async $beforeInsert() {
+		const randomId = await this.generateUuid();
+
+		this.id = randomId;
 		this.createdAt = new Date();
 		this.updatedAt = new Date();
 	}
@@ -28,7 +36,12 @@ export class BaseModel extends Model {
 		this.updatedAt = new Date();
 	}
 
-	static get columnNameMappers() {
-		return snakeCaseMappers();
+	protected async generateUuid(): Promise<string> {
+		const randomId = crypto.randomUUID();
+
+		const userExisted = await this.$modelClass.query().findById(randomId);
+		if (!userExisted) return randomId;
+
+		return this.generateUuid();
 	}
 }

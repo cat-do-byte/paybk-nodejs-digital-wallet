@@ -3,6 +3,7 @@ import { Model } from 'objection';
 import config from '../configuration';
 import knexConfig from '../database/knexfile';
 import User from '../models/user.model';
+import Wallet from '../models/wallet.model';
 
 interface IKnexModel {
 	name: string;
@@ -29,7 +30,17 @@ const databaseLoader = async (): Promise<IKnexModel[]> => {
 		name: User.name,
 		model: User,
 	};
-	return [userModel];
+
+	/* await Wallet.query().insert({
+		balance: 3,
+		userId: '80358677-a905-4191-8c5b-98efd8db74ee',
+	}); */
+
+	const walletModel: IKnexModel = {
+		name: Wallet.name,
+		model: Wallet,
+	};
+	return [userModel, walletModel];
 };
 
 export default databaseLoader;

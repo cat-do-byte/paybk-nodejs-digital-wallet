@@ -1,3 +1,3 @@
-export interface IQueueEmail {
+export interface IEmailQueue {
 	email: string;
 }

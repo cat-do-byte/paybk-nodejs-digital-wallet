@@ -6,17 +6,19 @@ import { RegisterDto } from '../dto/auth/register.dto';
 import { EmailQueue } from '../jobs/queues/email.queue';
 import User from '../models/user.model';
 import { UserRepository } from '../respository/user.repository';
+import UserService from './user.service';
 
 @Service()
 export default class AuthService {
 	constructor(
 		@Inject(User.name) private userModel: ModelClass<User>,
+		private userService: UserService,
 		private emailQueue: EmailQueue
 	) {}
 	// constructor(private readonly userRepository: UserRepository) {}
 
 	async register(registerData: RegisterDto): Promise<User> {
-		const { username, email } = registerData;
+		const { username, email, password, role } = registerData;
 
 		// check exist
 		const user = await this.userModel.query().where({ username }).orWhere({ email }).first();
@@ -26,7 +28,15 @@ export default class AuthService {
 		}
 
 		// create user
-		const newUser = await this.userModel.query().insert(registerData);
+		// const newUser = await this.userModel.query().insert(registerData);
+		const newUser = await this.userService.createUser({
+			username,
+			password,
+			email,
+			role,
+		});
+
+		console.log('newUser::', newUser);
 
 		this.emailQueue.addRegisterUser({ email: newUser.email });
 		// send email

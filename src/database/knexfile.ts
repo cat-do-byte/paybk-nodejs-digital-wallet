@@ -1,3 +1,4 @@
+import { knexSnakeCaseMappers } from 'objection';
 import path from 'path';
 import config from '../configuration';
 import { IKnexConfig } from '../interfaces/knexEnv.interface';

@@ -1,8 +1,8 @@
 import { Job } from 'bull';
-import { IQueueEmail } from '../../interfaces/queues/emailQueue.interface';
+import { IEmailQueue } from '../../interfaces/queues/emailQueue.interface';
 import EmailService from '../../services/email.service';
 
-const emailProcess = async (job: Job<IQueueEmail>) => {
+const emailProcess = async (job: Job<IEmailQueue>) => {
 	const { email } = job.data;
 	const emailService = new EmailService();
 

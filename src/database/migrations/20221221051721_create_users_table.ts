@@ -3,7 +3,7 @@ import { UserRole, UserStatus } from '../../models/user.model';
 
 export async function up(knex: Knex): Promise<void> {
 	return knex.schema.createTable('users', function (table) {
-		table.increments().primary();
+		table.uuid('id').primary();
 		table.string('username', 255).unique().notNullable();
 		table.string('email', 255).unique().notNullable();
 		table.string('password', 255).notNullable();

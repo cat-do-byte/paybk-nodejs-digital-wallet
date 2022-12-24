@@ -15,5 +15,5 @@ export class RegisterDto {
 
 	@IsEnum(UserRole)
 	@IsOptional()
-	role: string = UserRole.CUSTOMER;
+	role: UserRole = UserRole.CUSTOMER;
 }

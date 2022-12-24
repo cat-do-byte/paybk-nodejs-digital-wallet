@@ -4,10 +4,6 @@ import AuthService from '../services/auth.service';
 
 @JsonController('/')
 export default class AuthController {
-	/* @Get('/')
-	async register() {
-		return 4;
-	} */
 	constructor(private readonly authService: AuthService) {}
 
 	@Post('register')
