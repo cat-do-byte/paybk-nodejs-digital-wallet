@@ -1,4 +1,4 @@
 export interface IJwtPayload {
-	id: string;
-	role: string;
+	userId: string;
+	userRole: string;
 }

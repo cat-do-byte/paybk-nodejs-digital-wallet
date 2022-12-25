@@ -1,9 +1,13 @@
 import { ExpressErrorMiddlewareInterface, Middleware } from 'routing-controllers';
 import { Request, Response, NextFunction } from 'express';
+import config from '../configuration';
 
 @Middleware({ type: 'after' })
 export class HandleErrorResponse implements ExpressErrorMiddlewareInterface {
 	error(error: any, request: Request, response: Response, next: NextFunction) {
+		if (config.env === 'development') {
+			console.log(error);
+		}
 		if (!response.headersSent) {
 			// console.log(error);
 

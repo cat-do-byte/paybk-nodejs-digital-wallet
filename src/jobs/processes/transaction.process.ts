@@ -9,9 +9,7 @@ export class TransactionProcess {
 
 	async process(job: Job<Transaction>) {
 		const transactionService = Container.get(TransactionService);
-		console.log('job.data.status:::', job.data.status);
-		if (job.data.status === TransactionStatus.PROCESSING)
-			await transactionService.process(job.data);
+		await transactionService.process(job.data);
 	}
 }
 

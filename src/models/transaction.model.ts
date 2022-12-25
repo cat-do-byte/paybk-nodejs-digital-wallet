@@ -10,10 +10,12 @@ export enum TransactionType {
 }
 
 export enum TransactionStatus {
+	INIT = 'init',
 	PROCESSING = 'processing',
 	PENDING = 'pending',
 	SUCCESS = 'success',
 	CANCELED = 'canceled',
+	REJECTED = 'rejected',
 }
 
 export default class Transaction extends BaseModel {
@@ -47,9 +49,20 @@ export default class Transaction extends BaseModel {
 				status: {
 					type: 'string',
 					enum: Object.values(TransactionStatus),
-					default: TransactionStatus.PROCESSING,
+					default: TransactionStatus.INIT,
 				},
 			},
+		};
+	}
+
+	$parseDatabaseJson(jsonRaw: Model): any {
+		const json = super.$parseDatabaseJson(jsonRaw);
+		return {
+			...json,
+			charge: Number(json.charge),
+			amount: Number(json.amount),
+			sendAmount: Number(json.sendAmount),
+			receiveAmount: Number(json.receiveAmount),
 		};
 	}
 

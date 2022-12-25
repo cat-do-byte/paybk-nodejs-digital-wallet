@@ -7,7 +7,7 @@ const omit = (obj: object, exludes: string[]): object => {
 	return Object.fromEntries(Object.entries(obj).filter(([key]) => !excludeKeys.has(key)));
 };
 
-const generateToken = (payload: any): string => {
+const generateToken = (payload: IJwtPayload): string => {
 	return jwt.sign(payload, config.jwt.secret, { expiresIn: config.jwt.expires });
 };
 

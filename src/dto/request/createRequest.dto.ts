@@ -3,7 +3,7 @@ import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateRequestMoneyDto {
 	@IsUUID()
-	receiverId: string;
+	senderId: string;
 
 	@Type(() => Number)
 	@IsNumber({ maxDecimalPlaces: 2 })

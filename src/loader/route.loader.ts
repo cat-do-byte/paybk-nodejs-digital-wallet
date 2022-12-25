@@ -4,7 +4,6 @@ import { Express } from 'express';
 import path from 'path';
 import { HandleNotFound } from '../middlewares/notFound.middleware';
 import { HandleErrorResponse } from '../middlewares/handleErrorResponse.middleware';
-import { authMiddleware } from '../middlewares/auth.middleware';
 
 export const loadRoute = (app: Express) => {
 	useContainer(Container);

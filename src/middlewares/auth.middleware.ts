@@ -38,7 +38,7 @@ export const authMiddleware =
 			next();
 			return false;
 		}
-		if (currentUser && roles.find((role) => currentUser.role.indexOf(role) !== -1)) {
+		if (currentUser && roles.find((role) => currentUser.userRole.indexOf(role) !== -1)) {
 			next();
 			return false;
 		}

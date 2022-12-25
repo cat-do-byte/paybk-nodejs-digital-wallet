@@ -4,6 +4,7 @@ import { Inject, Service } from 'typedi';
 import { eventEmitter, Events } from '../common/event';
 import { LoginDto } from '../dto/auth/login.dto';
 import { RegisterDto } from '../dto/auth/register.dto';
+import { IJwtPayload } from '../interfaces/jwt.interface';
 import { EmailQueue } from '../jobs/queues/email.queue';
 import User from '../models/user.model';
 import { UserRepository } from '../respository/user.repository';
@@ -53,8 +54,8 @@ export default class AuthService {
 		if (verifyPassword !== true) throw new HttpError(401, 'Password is not correct');
 
 		const token = generateToken({
-			id: user.id,
-			role: user.role,
+			userId: user.id,
+			userRole: user.role,
 		});
 
 		return { token };

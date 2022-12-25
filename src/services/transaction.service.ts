@@ -34,9 +34,6 @@ export default class TransactionService {
 		console.log('transactionData:::', transactionData);
 		const newTransaction = await this.transactionModel.query().insert(transactionData);
 
-		//TODO option add queue base type
-		this.transactionQueue.add(newTransaction);
-
 		return newTransaction;
 	}
 
@@ -47,8 +44,15 @@ export default class TransactionService {
 		if (senderWallet.balance < sendAmount)
 			throw new HttpError(400, `The balance is not enough to make the transaction`);
 
+		// start process
+		console.log('start processs');
+		await this.transactionModel.query().findById(id).patch({
+			status: TransactionStatus.PROCESSING,
+		});
+
 		this.handleByTransactionTypes[type]({ senderWallet, receiverWallet, transactionData });
 
+		console.log('success process');
 		await this.transactionModel.query().findById(id).patch({
 			status: TransactionStatus.SUCCESS,
 		});
@@ -84,6 +88,21 @@ export default class TransactionService {
 		receiverWallet.balance += receiveAmount;
 		await receiverWallet.$query().patch();
 	}
+
+	startProcess(transactionData: Transaction) {
+		this.transactionQueue.add(transactionData);
+	}
+
+	async getTransaction(id: string) {
+		return this.transactionModel.query().findById(id);
+	}
+
+	async changeStatus(transactionData: Transaction, status: TransactionStatus) {
+		transactionData.status = status;
+		return transactionData.$query().patch();
+	}
+
+	async checkIsSender() {}
 
 	async checkAccountExisted(
 		senderId: string,
