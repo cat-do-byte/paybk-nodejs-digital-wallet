@@ -40,6 +40,18 @@ export class QueueConfig {
 	}
 }
 
+export class JwtConfig {
+	@IsString()
+	secret: string;
+
+	@IsString()
+	expires: string;
+
+	constructor(params: JwtConfig) {
+		Object.assign(this, params);
+	}
+}
+
 export class Config {
 	@IsString()
 	env: IConfigEnv;
@@ -57,9 +69,15 @@ export class Config {
 	@Type(() => QueueConfig)
 	queue: QueueConfig;
 
+	@IsObject()
+	@ValidateNested()
+	@Type(() => JwtConfig)
+	jwt: JwtConfig;
+
 	constructor(params: Config) {
 		Object.assign(this, params);
 		this.database = new DatabaseConfig(params.database);
 		this.queue = new QueueConfig(params.queue);
+		this.jwt = new JwtConfig(params.jwt);
 	}
 }

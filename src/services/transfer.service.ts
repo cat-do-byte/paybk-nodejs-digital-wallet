@@ -1,7 +1,9 @@
 import { ModelClass } from 'objection';
 import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
+import { requestContext } from '../common/context';
 import { SendMoneyDto } from '../dto/transfer/sendMoney.dto';
+import { IRequestContext } from '../interfaces/requestContext.interface';
 import { IWalletSent } from '../interfaces/wallet.interface';
 import { TransactionQueue } from '../jobs/queues/transaction.queue';
 import { TransactionStatus, TransactionType } from '../models/transaction.model';
@@ -20,11 +22,11 @@ export default class TransferService {
 	) {}
 
 	async sendMoney(sendData: SendMoneyDto) {
-		const currentId = '494a9185-2818-409c-901b-f6e0839a153f';
+		const { id: currentUserId } = requestContext.getStore();
 		const { receiverId, amount } = sendData;
 
 		return await this.handleSend({
-			senderId: currentId,
+			senderId: currentUserId,
 			receiverId,
 			amount,
 		});

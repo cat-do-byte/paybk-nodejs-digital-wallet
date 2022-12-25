@@ -15,6 +15,8 @@ const {
 	PORT,
 	NODE_ENV,
 	REDIS_QUEUE_URL,
+	JWT_TOKEN_SECRET,
+	JWT_TOKEN_EXP,
 } = process.env;
 
 const configOptions: Config = {
@@ -30,6 +32,10 @@ const configOptions: Config = {
 	port: Number(PORT),
 	queue: {
 		redisServer: REDIS_QUEUE_URL || '',
+	},
+	jwt: {
+		secret: JWT_TOKEN_SECRET || 'secret',
+		expires: JWT_TOKEN_EXP || '12h',
 	},
 };
 

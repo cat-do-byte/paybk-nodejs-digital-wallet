@@ -25,6 +25,7 @@
 		"typescript": "*"
 	},
 	"dependencies": {
+		"@types/jsonwebtoken": "^9.0.0",
 		"bcrypt": "^5.1.0",
 		"bull": "^4.10.2",
 		"class-transformer": "^0.5.1",

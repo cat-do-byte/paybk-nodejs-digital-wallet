@@ -26,8 +26,13 @@ export default class User extends BaseModel {
 
 	static tableName = 'users';
 
-	hiddens() {
+	// TODO hide password
+	/* hiddens() {
 		return ['password'];
+	} */
+
+	comparePassword(plainPassword: string) {
+		return bcrypt.compare(plainPassword, this.password);
 	}
 
 	static get jsonSchema() {

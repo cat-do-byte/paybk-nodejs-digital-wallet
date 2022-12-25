@@ -2,9 +2,9 @@ import { useContainer, useExpressServer } from 'routing-controllers';
 import Container from 'typedi';
 import { Express } from 'express';
 import path from 'path';
-import AuthController from '../controllers/auth.controller';
 import { HandleNotFound } from '../middlewares/notFound.middleware';
 import { HandleErrorResponse } from '../middlewares/handleErrorResponse.middleware';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 export const loadRoute = (app: Express) => {
 	useContainer(Container);
@@ -12,10 +12,15 @@ export const loadRoute = (app: Express) => {
 	useExpressServer(app, {
 		// controllers: [AuthController],
 		controllers: [path.join(__dirname, '..', '/controllers/*.ts')],
-		/*  authorizationChecker: authMiddleware,
-        currentUserChecker, */
+		// authorizationChecker: authMiddleware,
+		/*    currentUserChecker, */
 		defaultErrorHandler: false,
-		validation: { stopAtFirstError: true, forbidUnknownValues: false },
+		validation: {
+			stopAtFirstError: true,
+			forbidUnknownValues: false,
+			whitelist: true,
+			forbidNonWhitelisted: true,
+		},
 		cors: {
 			origin: '*',
 		},
