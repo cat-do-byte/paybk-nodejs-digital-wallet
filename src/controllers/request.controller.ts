@@ -1,13 +1,14 @@
 import { Body, Get, JsonController, Post } from 'routing-controllers';
-import { CreateRequestDto } from '../dto/request/createRequest.dto';
-import TransferService from '../services/transfer.service';
+import { CreateRequestMoneyDto } from '../dto/request/createRequest.dto';
+import Transaction from '../models/transaction.model';
+import RequestService from '../services/request.service';
 
-@JsonController('/request')
+@JsonController('/request-money')
 export default class RequestController {
-	constructor(private readonly transferService: TransferService) {}
+	constructor(private readonly requestService: RequestService) {}
 
-	@Post('/create')
-	async sendMoney(@Body() sendData: CreateRequestDto) {
-		return await this.transferService.sendMoney(sendData);
+	@Post('/')
+	async sendMoney(@Body() sendData: CreateRequestMoneyDto): Promise<Transaction> {
+		return await this.requestService.create(sendData);
 	}
 }

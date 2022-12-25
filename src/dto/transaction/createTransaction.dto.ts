@@ -1,4 +1,4 @@
-import { TransactionType } from '../../models/transaction.model';
+import { TransactionStatus, TransactionType } from '../../models/transaction.model';
 
 export class CreateTransactionDto {
 	senderId: string;
@@ -9,4 +9,5 @@ export class CreateTransactionDto {
 	amount: number;
 	note?: string;
 	type: TransactionType;
+	status?: TransactionStatus;
 }

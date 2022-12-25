@@ -4,7 +4,7 @@ import { Inject, Service } from 'typedi';
 import { SendMoneyDto } from '../dto/transfer/sendMoney.dto';
 import { IWalletSent } from '../interfaces/wallet.interface';
 import { TransactionQueue } from '../jobs/queues/transaction.queue';
-import { TransactionType } from '../models/transaction.model';
+import { TransactionStatus, TransactionType } from '../models/transaction.model';
 import User from '../models/user.model';
 import Wallet from '../models/wallet.model';
 import TransactionService from './transaction.service';
@@ -16,9 +16,7 @@ export default class TransferService {
 
 		@Inject(User.name) private userModel: ModelClass<User>,
 
-		private transactionService: TransactionService,
-
-		private transactionQueue: TransactionQueue
+		private transactionService: TransactionService
 	) {}
 
 	async sendMoney(sendData: SendMoneyDto) {
@@ -68,9 +66,8 @@ export default class TransferService {
 			receiveAmount,
 			charge: chargeFee,
 			type: TransactionType.TRANSFER,
+			status: TransactionStatus.PENDING,
 		});
-
-		this.transactionQueue.add(newTransaction);
 
 		return true;
 	}

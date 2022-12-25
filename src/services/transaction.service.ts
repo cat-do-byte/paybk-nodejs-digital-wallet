@@ -3,6 +3,7 @@ import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { CreateTransactionDto } from '../dto/transaction/createTransaction.dto';
 import { ITransferData } from '../interfaces/transaction.interface';
+import { TransactionQueue } from '../jobs/queues/transaction.queue';
 import Transaction, { TransactionStatus, TransactionType } from '../models/transaction.model';
 import User from '../models/user.model';
 import Wallet from '../models/wallet.model';
@@ -12,11 +13,11 @@ export default class TransactionService {
 	chargeFeeValue: number = 0.02;
 
 	handleByTransactionTypes: { [key in TransactionType]: Function } = {
-		[TransactionType.TRANSFER]: this.handleTransferMoney,
-		[TransactionType.REQUEST]: this.handleTransferMoney,
-		[TransactionType.PAYMENT]: this.handleTransferMoney,
-		[TransactionType.WITHDRAW]: this.handleTransferMoney,
-		[TransactionType.DEPOSIT]: this.handleTransferMoney,
+		[TransactionType.TRANSFER]: this.handleTransferMoneyTransaction,
+		[TransactionType.REQUEST]: this.handleRequestMoneyTransaction,
+		[TransactionType.PAYMENT]: this.handleTransferMoneyTransaction,
+		[TransactionType.WITHDRAW]: this.handleTransferMoneyTransaction,
+		[TransactionType.DEPOSIT]: this.handleTransferMoneyTransaction,
 	};
 
 	constructor(
@@ -24,11 +25,18 @@ export default class TransactionService {
 
 		@Inject(Wallet.name) private walletModel: ModelClass<Wallet>,
 
-		@Inject(User.name) private userModel: ModelClass<User>
+		@Inject(User.name) private userModel: ModelClass<User>,
+
+		private transactionQueue: TransactionQueue
 	) {}
 
 	async create(transactionData: CreateTransactionDto): Promise<Transaction> {
+		console.log('transactionData:::', transactionData);
 		const newTransaction = await this.transactionModel.query().insert(transactionData);
+
+		//TODO option add queue base type
+		this.transactionQueue.add(newTransaction);
+
 		return newTransaction;
 	}
 
@@ -48,13 +56,27 @@ export default class TransactionService {
 		return true;
 	}
 
-	async handleTransferMoney(transferData: ITransferData): Promise<void> {
+	async handleTransferMoneyTransaction(transferData: ITransferData): Promise<void> {
 		const {
 			senderWallet,
 			receiverWallet,
 			transactionData: { sendAmount, receiveAmount },
 		} = transferData;
 
+		senderWallet.balance -= sendAmount;
+		await senderWallet.$query().patch();
+
+		// increment from receiver
+		receiverWallet.balance += receiveAmount;
+		await receiverWallet.$query().patch();
+	}
+
+	async handleRequestMoneyTransaction(transferData: ITransferData): Promise<void> {
+		const {
+			senderWallet,
+			receiverWallet,
+			transactionData: { sendAmount, receiveAmount },
+		} = transferData;
 		senderWallet.balance -= sendAmount;
 		await senderWallet.$query().patch();
 

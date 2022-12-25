@@ -1,5 +1,5 @@
-import { Transform, Type } from 'class-transformer';
-import { IsNumber, IsUUID, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class SendMoneyDto {
 	@IsUUID()
@@ -9,4 +9,8 @@ export class SendMoneyDto {
 	@IsNumber({ maxDecimalPlaces: 2 })
 	@Min(0.01)
 	amount: number;
+
+	@IsString()
+	@IsOptional()
+	note: string;
 }
