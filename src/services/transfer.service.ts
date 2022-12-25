@@ -3,6 +3,7 @@ import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { SendMoneyDto } from '../dto/transfer/sendMoney.dto';
 import { IWalletSent } from '../interfaces/wallet.interface';
+import { TransactionQueue } from '../jobs/queues/transaction.queue';
 import { TransactionType } from '../models/transaction.model';
 import User from '../models/user.model';
 import Wallet from '../models/wallet.model';
@@ -10,14 +11,14 @@ import TransactionService from './transaction.service';
 
 @Service()
 export default class TransferService {
-	chargeFeeValue: number = 0.02;
-
 	constructor(
 		@Inject(Wallet.name) private walletModel: ModelClass<Wallet>,
 
 		@Inject(User.name) private userModel: ModelClass<User>,
 
-		private transactionService: TransactionService
+		private transactionService: TransactionService,
+
+		private transactionQueue: TransactionQueue
 	) {}
 
 	async sendMoney(sendData: SendMoneyDto) {
@@ -35,38 +36,46 @@ export default class TransferService {
 		const { senderId, receiverId, amount, chargeForSender, note } = transactionData;
 
 		// check exist user
-		const { senderWallet, receiverWallet } = await this.checkAccountExisted(senderId, receiverId);
-		console.log('usersInTransaction:::', senderWallet, receiverWallet);
+		const { senderWallet, receiverWallet } = await this.transactionService.checkAccountExisted(
+			senderId,
+			receiverId
+		);
+		// console.log('usersInTransaction:::', senderWallet, receiverWallet);
 
 		// calculate after charge
-		const { sendAmount, receiveAmount } = this.calculateAmount(amount, chargeForSender);
+		const { sendAmount, receiveAmount, chargeFee } = this.transactionService.calculateAmount(
+			amount,
+			chargeForSender
+		);
 
 		// check available balance for sender
 		if (senderWallet.balance < sendAmount)
 			throw new HttpError(400, `The balance is not enough to make the transaction`);
 
 		// reduce from sender
-		senderWallet.balance -= sendAmount;
+		/* senderWallet.balance -= sendAmount;
 		await senderWallet.$query().patch();
 
 		// increment from receiver
 		receiverWallet.balance += receiveAmount;
-		await receiverWallet.$query().patch();
+		await receiverWallet.$query().patch(); */
 
-		await this.transactionService.create({
+		const newTransaction = await this.transactionService.create({
 			senderId,
 			receiverId,
 			amount,
 			sendAmount,
 			receiveAmount,
-			charge: amount * this.chargeFeeValue,
+			charge: chargeFee,
 			type: TransactionType.TRANSFER,
 		});
+
+		this.transactionQueue.add(newTransaction);
 
 		return true;
 	}
 
-	async checkAccountExisted(
+	/* async checkAccountExisted(
 		senderId: string,
 		receiverId: string
 	): Promise<{ senderWallet: Wallet; receiverWallet: Wallet }> {
@@ -88,29 +97,5 @@ export default class TransferService {
 			senderWallet,
 			receiverWallet,
 		};
-	}
-
-	calculateAmount(
-		amount: number,
-		chargeForSender?: boolean
-	): { sendAmount: number; receiveAmount: number } {
-		let sendAmount: number;
-		let receiveAmount: number;
-
-		const chargeFee = amount * this.chargeFeeValue;
-		if (chargeForSender === false) {
-			// charge for receiver
-			sendAmount = amount;
-			receiveAmount = amount - chargeFee;
-		} else {
-			// charge for sender
-			sendAmount = amount + chargeFee;
-			receiveAmount = amount;
-		}
-
-		return {
-			sendAmount,
-			receiveAmount,
-		};
-	}
+	} */
 }

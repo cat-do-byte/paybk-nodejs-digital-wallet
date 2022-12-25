@@ -10,6 +10,7 @@ export enum TransactionType {
 }
 
 export enum TransactionStatus {
+	PROCESSING = 'processing',
 	PENDING = 'pending',
 	SUCCESS = 'success',
 	CANCELED = 'canceled',
@@ -24,7 +25,7 @@ export default class Transaction extends BaseModel {
 	sendAmount: number;
 	receiveAmount: number;
 	note: string;
-	type: TransactionType;
+	type!: TransactionType;
 	status: TransactionStatus;
 
 	static tableName = 'transactions';
@@ -46,7 +47,7 @@ export default class Transaction extends BaseModel {
 				status: {
 					type: 'string',
 					enum: Object.values(TransactionStatus),
-					default: TransactionStatus.SUCCESS,
+					default: TransactionStatus.PROCESSING,
 				},
 			},
 		};
