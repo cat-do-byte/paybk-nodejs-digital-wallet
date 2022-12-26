@@ -1,5 +1,6 @@
-import { Model } from 'objection';
+import { Model, QueryContext } from 'objection';
 import { BaseModel } from './base.model';
+import Redeem from './redeem.model';
 
 export enum TransactionAction {
 	// for Redeem
@@ -25,6 +26,9 @@ export enum TransactionStatus {
 	REJECTED = 'rejected',
 }
 
+// NOTE you maybe use only one table transactions and store other info of
+// NOTE transfer/ request / redeem... in one column with json format
+
 export default class Transaction extends BaseModel {
 	id: string;
 	senderId!: string;
@@ -36,6 +40,8 @@ export default class Transaction extends BaseModel {
 	note: string;
 	type!: TransactionType;
 	status: TransactionStatus;
+
+	info?: any;
 
 	static tableName = 'transactions';
 
@@ -76,6 +82,13 @@ export default class Transaction extends BaseModel {
 		};
 	}
 
+	async $afterFind() {
+		if (this.type === TransactionType.REDEEM) {
+			const redeem = await Redeem.query().findOne({ transactionId: this.id });
+			this.info = redeem;
+		}
+	}
+
 	static relationMappings = () => ({
 		sender: {
 			relation: Model.BelongsToOneRelation,
@@ -92,6 +105,15 @@ export default class Transaction extends BaseModel {
 			join: {
 				from: 'transactions.receiverId',
 				to: 'users.id',
+			},
+		},
+
+		redeem: {
+			relation: Model.HasOneRelation,
+			modelClass: 'redeem.model',
+			join: {
+				from: 'users.id',
+				to: 'redeems.userId',
 			},
 		},
 	});
