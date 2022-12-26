@@ -15,4 +15,8 @@ const verifyToken = (token: string): IJwtPayload => {
 	return jwt.verify(token, config.jwt.secret) as IJwtPayload;
 };
 
-export { omit, generateToken, verifyToken };
+const genRandomNumber = (n: number) => [...Array(n)].map((_) => (Math.random() * 10) | 0).join('');
+
+const generateReemCode = () => genRandomNumber(7) + '-' + genRandomNumber(7);
+
+export { omit, generateToken, verifyToken, generateReemCode };

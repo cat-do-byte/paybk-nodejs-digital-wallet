@@ -2,6 +2,7 @@ import Knex from 'knex';
 import { Model } from 'objection';
 import config from '../configuration';
 import knexConfig from '../database/knexfile';
+import Redeem from '../models/redeem.model';
 import Transaction from '../models/transaction.model';
 import User from '../models/user.model';
 import Wallet from '../models/wallet.model';
@@ -27,6 +28,7 @@ const databaseLoader = async (): Promise<IKnexModel[]> => {
 			console.error(e);
 		});
 
+	// TODO list by directory
 	const userModel: IKnexModel = {
 		name: User.name,
 		model: User,
@@ -41,7 +43,13 @@ const databaseLoader = async (): Promise<IKnexModel[]> => {
 		name: Wallet.name,
 		model: Wallet,
 	};
-	return [userModel, walletModel, transactionModel];
+
+	const redeemModel: IKnexModel = {
+		name: Redeem.name,
+		model: Redeem,
+	};
+
+	return [userModel, walletModel, transactionModel, redeemModel];
 };
 
 export default databaseLoader;

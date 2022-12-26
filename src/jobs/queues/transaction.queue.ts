@@ -1,8 +1,8 @@
 import Queue from 'bull';
-import { Transaction } from 'objection';
 import { Service } from 'typedi';
 import config from '../../configuration';
-import { IEmailQueue } from '../../interfaces/queues/emailQueue.interface';
+import { ITransactionQueue } from '../../interfaces/queues/transactionQueue.interface';
+import Transaction, { TransactionAction } from '../../models/transaction.model';
 import TransactionProcess from '../processes/transaction.process';
 import queues from '../queues';
 import { BaseQueue } from './base.queue';
@@ -13,7 +13,7 @@ const QueueTypes = {
 
 @Service()
 export class TransactionQueue implements BaseQueue {
-	queue: Queue.Queue;
+	queue: Queue.Queue<ITransactionQueue>;
 
 	constructor(private transactionProcess: TransactionProcess) {
 		this.initQueue();
@@ -21,7 +21,7 @@ export class TransactionQueue implements BaseQueue {
 	}
 
 	initQueue() {
-		this.queue = new Queue<IEmailQueue>(queues.TRANSACTION, {
+		this.queue = new Queue<ITransactionQueue>(queues.TRANSACTION, {
 			redis: config.queue.redisServer,
 		});
 	}
@@ -30,7 +30,7 @@ export class TransactionQueue implements BaseQueue {
 		this.queue.process(this.transactionProcess.process);
 	}
 
-	add(data: Transaction, type?: string, options?: Queue.JobOptions) {
-		type ? this.queue.add(type, data, options) : this.queue.add(data, options);
+	add(transaction: Transaction, action?: TransactionAction, options?: Queue.JobOptions) {
+		this.queue.add({ transaction, action }, options);
 	}
 }

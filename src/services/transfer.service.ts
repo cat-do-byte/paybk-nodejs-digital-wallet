@@ -36,7 +36,7 @@ export default class TransferService {
 		const { senderId, receiverId, amount, chargeForSender, note } = transactionData;
 
 		// check exist user
-		const { senderWallet, receiverWallet } = await this.transactionService.checkAccountExisted(
+		const { senderWallet, receiverWallet } = await this.transactionService.checkAccountsExist(
 			senderId,
 			receiverId
 		);

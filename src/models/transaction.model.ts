@@ -1,9 +1,16 @@
 import { Model } from 'objection';
 import { BaseModel } from './base.model';
 
+export enum TransactionAction {
+	// for Redeem
+	CREATE_CODE = 'create_code',
+	USE_CODE = 'use_code',
+}
+
 export enum TransactionType {
 	TRANSFER = 'transfer',
 	REQUEST = 'request',
+	REDEEM = 'redeem',
 	PAYMENT = 'payment',
 	WITHDRAW = 'withdraw',
 	DEPOSIT = 'deposit',
@@ -39,8 +46,11 @@ export default class Transaction extends BaseModel {
 
 			properties: {
 				senderId: { type: 'uuid' },
-				receiverId: { type: 'uuid' },
+				receiverId: { type: ['uuid', 'null'] },
 				amount: { type: 'number', minimum: 0.01 },
+				charge: { type: 'number' },
+				sendAmount: { type: 'number', minimum: 0.01 },
+				receiveAmount: { type: 'number', minimum: 0.01 },
 				type: {
 					type: 'string',
 					enum: Object.values(TransactionType),
