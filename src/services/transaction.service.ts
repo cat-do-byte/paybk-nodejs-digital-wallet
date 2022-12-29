@@ -19,12 +19,13 @@ export default class TransactionService {
 	chargeFeeValue: number = 0.02;
 
 	handleByTransactionTypes: { [key in TransactionType]: Function } = {
-		[TransactionType.TRANSFER]: this.handleTransferMoneyTransaction,
-		[TransactionType.REQUEST]: this.handleRequestMoneyTransaction,
+		[TransactionType.TRANSFER]: this.handleTransferMoneyTransaction.bind(this),
+		[TransactionType.REQUEST]: this.handleRequestMoneyTransaction.bind(this),
 		[TransactionType.REDEEM]: this.handleRedeemTransaction.bind(this),
-		[TransactionType.PAYMENT]: this.handleTransferMoneyTransaction,
-		[TransactionType.WITHDRAW]: this.handleTransferMoneyTransaction,
-		[TransactionType.DEPOSIT]: this.handleTransferMoneyTransaction,
+		[TransactionType.PAYMENT]: this.handleTransferMoneyTransaction.bind(this),
+		[TransactionType.PAYMENT_VOUCHER]: this.handleTransferMoneyTransaction.bind(this),
+		[TransactionType.WITHDRAW]: this.handleTransferMoneyTransaction.bind(this),
+		[TransactionType.DEPOSIT]: this.handleTransferMoneyTransaction.bind(this),
 	};
 
 	constructor(
@@ -45,9 +46,12 @@ export default class TransactionService {
 	}
 
 	async process(transactionData: Transaction, action?: TransactionAction) {
-		const { type } = transactionData;
+		const { type, id } = transactionData;
 
-		this.handleByTransactionTypes[type]({ transactionData, action });
+		const transaction = await this.transactionModel.query().findById(id);
+		if (!transaction) throw new HttpError(404, `The transaction does not exist`);
+
+		this.handleByTransactionTypes[type]({ transactionData: transaction, action });
 		return true;
 
 		/* const { senderId, receiverId, sendAmount, id, type } = transactionData;
@@ -78,11 +82,14 @@ export default class TransactionService {
 	}
 
 	async handleTransferMoneyTransaction(transferData: ITransferData): Promise<void> {
-		const {
-			senderWallet,
-			receiverWallet,
-			transactionData: { sendAmount, receiveAmount },
-		} = transferData;
+		const { transactionData } = transferData;
+		const { sendAmount, receiveAmount, senderId, receiverId } = transactionData;
+
+		const { senderWallet, receiverWallet } = await this.checkAccountsExist(senderId, receiverId);
+		if (senderWallet.balance < sendAmount)
+			throw new HttpError(400, `The balance is not enough to make the transaction`);
+
+		await this.changeStatus(transactionData, TransactionStatus.PROCESSING);
 
 		senderWallet.balance -= sendAmount;
 		await senderWallet.$query().patch();
@@ -90,20 +97,28 @@ export default class TransactionService {
 		// increment from receiver
 		receiverWallet.balance += receiveAmount;
 		await receiverWallet.$query().patch();
+
+		await this.changeStatus(transactionData, TransactionStatus.SUCCESS);
 	}
 
 	async handleRequestMoneyTransaction(transferData: ITransferData): Promise<void> {
-		const {
-			senderWallet,
-			receiverWallet,
-			transactionData: { sendAmount, receiveAmount },
-		} = transferData;
+		const { transactionData } = transferData;
+		const { sendAmount, receiveAmount, senderId, receiverId } = transactionData;
+
+		const { senderWallet, receiverWallet } = await this.checkAccountsExist(senderId, receiverId);
+		if (senderWallet.balance < sendAmount)
+			throw new HttpError(400, `The balance is not enough to make the transaction`);
+
+		await this.changeStatus(transactionData, TransactionStatus.PROCESSING);
+
 		senderWallet.balance -= sendAmount;
 		await senderWallet.$query().patch();
 
 		// increment from receiver
 		receiverWallet.balance += receiveAmount;
 		await receiverWallet.$query().patch();
+
+		await this.changeStatus(transactionData, TransactionStatus.SUCCESS);
 	}
 
 	async handleRedeemTransaction(transferData: ITransferData): Promise<void> {
@@ -116,12 +131,12 @@ export default class TransactionService {
 			if (senderWallet.balance < sendAmount)
 				throw new HttpError(400, `The balance is not enough to make the transaction`);
 
-			this.changeStatus(id, TransactionStatus.PROCESSING);
+			await this.changeStatus(id, TransactionStatus.PROCESSING);
 
 			senderWallet.balance -= sendAmount;
 			await senderWallet.$query().patch();
 
-			this.changeStatus(id, TransactionStatus.PENDING);
+			await this.changeStatus(id, TransactionStatus.PENDING);
 		} else if (action === TransactionAction.USE_CODE) {
 			const { userId: receiverId } = requestContext.getStore() as IRequestContext;
 			const { receiveAmount, id } = transactionData;
@@ -131,7 +146,7 @@ export default class TransactionService {
 			receiverWallet.balance += receiveAmount;
 			await receiverWallet.$query().patch();
 
-			this.changeStatus(id, TransactionStatus.SUCCESS);
+			await this.changeStatus(id, TransactionStatus.SUCCESS);
 		}
 	}
 
@@ -143,15 +158,18 @@ export default class TransactionService {
 		return this.transactionModel.query().findById(id);
 	}
 
-	async changeStatus(transaction: Transaction | string, status: TransactionStatus) {
+	async changeStatus(
+		transaction: Transaction | string,
+		status: TransactionStatus
+	): Promise<boolean> {
 		if (transaction instanceof Transaction) {
-			transaction.status = status;
-			transaction.$query().patch();
+			await transaction.$query().patch({ status });
 			return true;
 		}
-		return this.transactionModel.query().findById(transaction).patch({
+		await this.transactionModel.query().findById(transaction).patch({
 			status: status,
 		});
+		return true;
 	}
 
 	async checkAccountExist(accountId: string, role?: string): Promise<Wallet> {

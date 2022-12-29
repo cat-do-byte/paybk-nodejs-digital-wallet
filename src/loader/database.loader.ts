@@ -5,6 +5,7 @@ import knexConfig from '../database/knexfile';
 import Redeem from '../models/redeem.model';
 import Transaction from '../models/transaction.model';
 import User from '../models/user.model';
+import Voucher from '../models/voucher.model';
 import Wallet from '../models/wallet.model';
 
 interface IKnexModel {
@@ -49,7 +50,12 @@ const databaseLoader = async (): Promise<IKnexModel[]> => {
 		model: Redeem,
 	};
 
-	return [userModel, walletModel, transactionModel, redeemModel];
+	const voucherModel: IKnexModel = {
+		name: Voucher.name,
+		model: Voucher,
+	};
+
+	return [userModel, walletModel, transactionModel, redeemModel, voucherModel];
 };
 
 export default databaseLoader;

@@ -42,5 +42,5 @@ export const authMiddleware =
 			next();
 			return false;
 		}
-		throw new HttpError(401, 'You dont have permission for this action');
+		next(new HttpError(401, 'You dont have permission for this action'));
 	};

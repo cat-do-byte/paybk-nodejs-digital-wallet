@@ -13,6 +13,7 @@ export enum TransactionType {
 	REQUEST = 'request',
 	REDEEM = 'redeem',
 	PAYMENT = 'payment',
+	PAYMENT_VOUCHER = 'payment_voucher',
 	WITHDRAW = 'withdraw',
 	DEPOSIT = 'deposit',
 }
@@ -52,7 +53,7 @@ export default class Transaction extends BaseModel {
 
 			properties: {
 				senderId: { type: 'uuid' },
-				receiverId: { type: ['uuid', 'null'] },
+				receiverId: { type: 'uuid' },
 				amount: { type: 'number', minimum: 0.01 },
 				charge: { type: 'number' },
 				sendAmount: { type: 'number', minimum: 0.01 },
