@@ -1,5 +1,4 @@
 import express, { Express } from 'express';
-import { requestContext } from './common/context';
 import { dependencyLoader } from './loader/di.loader';
 import { loadRoute } from './loader/route.loader';
 

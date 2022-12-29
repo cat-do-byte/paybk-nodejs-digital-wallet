@@ -2,9 +2,14 @@ import { ModelClass } from 'objection';
 import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { requestContext } from '../common/context';
+import logger from '../common/logger';
 import { CreateTransactionDto } from '../dto/transaction/createTransaction.dto';
 import { IRequestContext } from '../interfaces/requestContext.interface';
-import { ITransferData } from '../interfaces/transaction.interface';
+import {
+	ITransferData,
+	ITransferReceive,
+	ITransferSend,
+} from '../interfaces/transaction.interface';
 import { TransactionQueue } from '../jobs/queues/transaction.queue';
 import Transaction, {
 	TransactionAction,
@@ -83,7 +88,7 @@ export default class TransactionService {
 
 	async handleTransferMoneyTransaction(transferData: ITransferData): Promise<void> {
 		const { transactionData } = transferData;
-		const { sendAmount, receiveAmount, senderId, receiverId } = transactionData;
+		const { sendAmount, senderId, receiverId } = transactionData;
 
 		const { senderWallet, receiverWallet } = await this.checkAccountsExist(senderId, receiverId);
 		if (senderWallet.balance < sendAmount)
@@ -91,12 +96,14 @@ export default class TransactionService {
 
 		await this.changeStatus(transactionData, TransactionStatus.PROCESSING);
 
-		senderWallet.balance -= sendAmount;
-		await senderWallet.$query().patch();
+		/* senderWallet.balance -= sendAmount;
+		await senderWallet.$query().patch(); */
+		await this.doTransfer(senderWallet, transactionData, true);
 
 		// increment from receiver
-		receiverWallet.balance += receiveAmount;
-		await receiverWallet.$query().patch();
+		/* receiverWallet.balance += receiveAmount;
+		await receiverWallet.$query().patch(); */
+		await this.doTransfer(receiverWallet, transactionData, false);
 
 		await this.changeStatus(transactionData, TransactionStatus.SUCCESS);
 	}
@@ -226,5 +233,43 @@ export default class TransactionService {
 			receiveAmount,
 			chargeFee,
 		};
+	}
+
+	async doTransfer(wallet: Wallet, transactionData: Transaction, isSend: boolean = true) {
+		throw new Error('kaka');
+		if (isSend) {
+			const { sendAmount, charge, senderId, id } = transactionData;
+
+			wallet.balance -= sendAmount;
+			await wallet.$query().patch();
+
+			this.logTranferSend({
+				senderId,
+				sendAmount,
+				charge,
+				createdAt: new Date(),
+				transactionId: id,
+			});
+		} else {
+			const { receiveAmount, receiverId, id } = transactionData;
+
+			wallet.balance += receiveAmount;
+			await wallet.$query().patch();
+
+			this.logTranferReceive({
+				receiverId,
+				receiveAmount,
+				createdAt: new Date(),
+				transactionId: id,
+			});
+		}
+	}
+
+	logTranferSend(sendData: ITransferSend) {
+		logger.info(sendData);
+	}
+
+	logTranferReceive(receiveData: ITransferReceive) {
+		logger.info(receiveData);
 	}
 }

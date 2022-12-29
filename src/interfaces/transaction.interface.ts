@@ -7,3 +7,18 @@ export interface ITransferData {
 	transactionData: Transaction;
 	action: TransactionAction;
 }
+
+export interface ITransferSend {
+	senderId: string;
+	sendAmount: number;
+	charge: number;
+	createdAt: Date;
+	transactionId: string;
+}
+
+export interface ITransferReceive {
+	receiverId: string;
+	receiveAmount: number;
+	createdAt: Date;
+	transactionId: string;
+}
