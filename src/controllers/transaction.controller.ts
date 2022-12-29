@@ -12,8 +12,6 @@ export default class TransactionController {
 
 	@Post('/send')
 	async sendMoney(@Body() sendData: SendMoneyDto) {
-		const toe = requestContext.getStore();
-		console.log('toe contr', toe);
 		return await this.transferService.sendMoney(sendData);
 	}
 }

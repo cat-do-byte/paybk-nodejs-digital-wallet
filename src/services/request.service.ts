@@ -22,6 +22,9 @@ export default class RequestService {
 			false
 		);
 
+		// check sender exist
+		await this.transactionService.checkAccountExist(senderId);
+
 		const result = await this.transactionService.create({
 			senderId,
 			receiverId,
@@ -46,20 +49,29 @@ export default class RequestService {
 			throw new HttpError(401, 'You dont have permission confirm this transaction');
 		}
 
+		const { senderId, sendAmount } = transaction;
+
+		const senderWallet = await this.transactionService.checkAccountExist(senderId);
+		if (senderWallet.balance < sendAmount)
+			throw new HttpError(400, `The balance is not enough to make the transaction`);
+
 		this.transactionService.startProcess(transaction);
 		return true;
 	}
 
 	async reject(transactionId: string) {
-		// check is who requested
 		const { userId } = requestContext.getStore() as IRequestContext;
 
+		// check is who requested
 		const transaction = await this.transactionService.getTransaction(transactionId);
 		if (transaction.senderId !== userId) {
 			throw new HttpError(401, 'You dont have permission confirm this transaction');
 		}
 
-		await this.transactionService.changeStatus(transaction, TransactionStatus.REJECTED);
+		if (transaction.status !== TransactionStatus.PENDING)
+			throw new HttpError(401, 'You can not change status of this transaction');
+
+		await this.transactionService.changeStatus({ transaction, status: TransactionStatus.REJECTED });
 		return true;
 	}
 
@@ -71,7 +83,10 @@ export default class RequestService {
 			throw new HttpError(401, 'You dont have permission confirm this transaction');
 		}
 
-		await this.transactionService.changeStatus(transaction, TransactionStatus.CANCELED);
+		if (transaction.status !== TransactionStatus.PENDING)
+			throw new HttpError(401, 'You can not change status of this transaction');
+
+		await this.transactionService.changeStatus({ transaction, status: TransactionStatus.CANCELED });
 		return true;
 	}
 }

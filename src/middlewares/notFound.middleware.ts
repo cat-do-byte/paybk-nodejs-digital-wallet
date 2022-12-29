@@ -4,7 +4,7 @@ import { ExpressMiddlewareInterface, Middleware, NotFoundError } from 'routing-c
 export class HandleNotFound implements ExpressMiddlewareInterface {
 	use(request: Request, response: any, next: (err: any) => any) {
 		if (!response.headersSent) {
-			const error = new NotFoundError();
+			const error = new NotFoundError('Url does not exist');
 			next(error);
 		}
 	}

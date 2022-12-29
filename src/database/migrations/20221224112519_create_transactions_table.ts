@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.uuid('id').primary();
 		table.uuid('senderId').notNullable().references('users.id').onDelete('cascade');
 		table.uuid('receiverId').nullable().references('users.id').onDelete('cascade');
-		table.decimal('charge', 2, 2);
+		table.decimal('charge', 8, 2);
 		table.decimal('amount', 10, 2);
 		table.decimal('sendAmount', 10, 2);
 		table.decimal('receiveAmount', 10, 2);

@@ -27,8 +27,15 @@ export const authMiddleware =
 	(roles: string[]) => async (request: Request, response: Response, next: NextFunction) => {
 		const authHeader = request.headers['authorization'];
 
-		if (!authHeader) return false;
+		if (!authHeader) {
+			next(new HttpError(401, 'You dont have permission for this action'));
+			return false;
+		}
 		const token = authHeader.split(' ')[1];
+		if (!token) {
+			next(new HttpError(401, 'Token is wrong format'));
+			return false;
+		}
 		const currentUser = await verifyToken(token);
 
 		// console.log(currentUser, roles);
