@@ -6,7 +6,7 @@ import { SendMoneyDto } from '../dto/transfer/sendMoney.dto';
 import { IRequestContext } from '../interfaces/requestContext.interface';
 import { IWalletSent } from '../interfaces/wallet.interface';
 import { TransactionQueue } from '../jobs/queues/transaction.queue';
-import { TransactionStatus, TransactionType } from '../models/transaction.model';
+import Transaction, { TransactionStatus, TransactionType } from '../models/transaction.model';
 import User from '../models/user.model';
 import Wallet from '../models/wallet.model';
 import TransactionService from './transaction.service';
@@ -32,14 +32,11 @@ export default class TransferService {
 		});
 	}
 
-	async handleSend(transactionData: IWalletSent): Promise<boolean> {
+	async handleSend(transactionData: IWalletSent): Promise<Transaction> {
 		const { senderId, receiverId, amount, chargeForSender, note } = transactionData;
 
 		// check exist user
-		const { senderWallet, receiverWallet } = await this.transactionService.checkAccountsExist(
-			senderId,
-			receiverId
-		);
+		const { senderWallet } = await this.transactionService.checkAccountsExist(senderId, receiverId);
 
 		// calculate after charge
 		const { sendAmount, receiveAmount, chargeFee } = this.transactionService.calculateAmount(
@@ -50,22 +47,19 @@ export default class TransferService {
 		// check available balance for sender
 		if (senderWallet.balance < sendAmount)
 			throw new HttpError(400, `The balance is not enough to make the transaction`);
-		try {
-			const newTransaction = await this.transactionService.create({
-				senderId,
-				receiverId,
-				amount,
-				sendAmount,
-				receiveAmount,
-				charge: chargeFee,
-				type: TransactionType.TRANSFER,
-			});
+		const newTransaction = await this.transactionService.create({
+			senderId,
+			receiverId,
+			amount,
+			sendAmount,
+			receiveAmount,
+			charge: chargeFee,
+			type: TransactionType.TRANSFER,
+			note,
+		});
 
-			await this.transactionService.startProcess(newTransaction);
-		} catch (err) {
-			throw err;
-		}
+		await this.transactionService.startProcess(newTransaction);
 
-		return true;
+		return newTransaction;
 	}
 }

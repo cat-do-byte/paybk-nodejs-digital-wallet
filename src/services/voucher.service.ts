@@ -15,6 +15,8 @@ export default class VoucherService {
 		// TODO
 		// validate code
 
+		// validate expiresDate
+
 		return await this.voucherModel
 			.query()
 			.insert({ ...voucherData, creatorId: userId, applyFor: userId });

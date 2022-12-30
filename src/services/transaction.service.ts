@@ -1,4 +1,4 @@
-import { ModelClass } from 'objection';
+import { ModelClass, Transaction as ObjectionTransaction } from 'objection';
 import { HttpError } from 'routing-controllers';
 import { Inject, Service } from 'typedi';
 import { requestContext } from '../common/context';
@@ -56,15 +56,23 @@ export default class TransactionService {
 		}
 	}
 
-	async process(transactionData: Transaction, action?: TransactionAction) {
+	async process(
+		transactionData: Transaction,
+		action?: TransactionAction,
+		trx?: ObjectionTransaction
+	) {
 		const { type, id } = transactionData;
 
 		const transaction = await this.transactionModel.query().findById(id);
 		if (!transaction) throw new HttpError(404, `The transaction does not exist`);
 		try {
-			await this.transactionModel.transaction((trx) => {
-				return this.handleByTransactionTypes[type]({ transactionData: transaction, action, trx });
-			});
+			if (trx) {
+				await this.handleByTransactionTypes[type]({ transactionData: transaction, action, trx });
+			} else {
+				await this.transactionModel.transaction((trx) => {
+					return this.handleByTransactionTypes[type]({ transactionData: transaction, action, trx });
+				});
+			}
 		} catch (err) {
 			console.log('error transfer ::', err);
 			throw err;
@@ -162,7 +170,7 @@ export default class TransactionService {
 				trx,
 			});
 
-			await this.doTransfer({ wallet: senderWallet, transactionData, isSend: true });
+			await this.doTransfer({ wallet: senderWallet, transactionData, isSend: true, trx });
 
 			await this.changeStatus({
 				transaction: transactionData,
@@ -175,7 +183,7 @@ export default class TransactionService {
 
 			const receiverWallet = await this.checkAccountExist(receiverId);
 
-			await this.doTransfer({ wallet: receiverWallet, transactionData, isSend: false });
+			await this.doTransfer({ wallet: receiverWallet, transactionData, isSend: false, trx });
 
 			await this.changeStatus({
 				transaction: transactionData,
@@ -185,12 +193,16 @@ export default class TransactionService {
 		}
 	}
 
-	async startProcess(transactionData: Transaction, action?: TransactionAction) {
+	async startProcess(
+		transactionData: Transaction,
+		action?: TransactionAction,
+		trx?: ObjectionTransaction
+	) {
 		// push to queue ?? I dont think so ....
 		// this.transactionQueue.add(transactionData, action);
 
 		// process imediate
-		await this.process(transactionData, action);
+		await this.process(transactionData, action, trx);
 	}
 
 	async getTransaction(id: string) {

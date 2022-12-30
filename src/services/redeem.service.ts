@@ -22,7 +22,7 @@ export default class RedeemService {
 		@Inject(Redeem.name) private redeemModel: ModelClass<Redeem>
 	) {}
 
-	async create(redeemData: CreateRedeemDto): Promise<Redeem> {
+	async create(redeemData: CreateRedeemDto): Promise<Redeem | null> {
 		const { userId: senderId } = requestContext.getStore() as IRequestContext;
 		const { chargeForSender, amount, note } = redeemData;
 		const code = await this.genRedeemCode();
@@ -50,12 +50,26 @@ export default class RedeemService {
 			type: TransactionType.REDEEM,
 		});
 
-		await this.transactionService.startProcess(newTransaction, TransactionAction.CREATE_CODE);
+		let redeem: Redeem | null = null;
 
-		const redeem = await this.redeemModel.query().insert({
-			transactionId: newTransaction.id,
-			code,
-		});
+		try {
+			await this.redeemModel.transaction(async (trx) => {
+				await this.transactionService.startProcess(
+					newTransaction,
+					TransactionAction.CREATE_CODE,
+					trx
+				);
+
+				redeem = await this.redeemModel.query(trx).insert({
+					transactionId: newTransaction.id,
+					code,
+				});
+
+				return redeem;
+			});
+		} catch (err) {
+			throw new HttpError(400, 'Can not create Redeem Code');
+		}
 
 		return redeem;
 	}
@@ -72,7 +86,7 @@ export default class RedeemService {
 			throw new HttpError(400, 'Code is used');
 
 		// do transaction
-		this.transactionService.startProcess(redeem.transaction, TransactionAction.USE_CODE);
+		await this.transactionService.startProcess(redeem.transaction, TransactionAction.USE_CODE);
 
 		return true;
 	}

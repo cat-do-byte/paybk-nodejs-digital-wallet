@@ -4,7 +4,7 @@ import { Inject, Service } from 'typedi';
 import { requestContext } from '../common/context';
 import { PayDto } from '../dto/payment/pay.dto';
 import { IRequestContext } from '../interfaces/requestContext.interface';
-import Transaction, { TransactionType } from '../models/transaction.model';
+import Transaction, { TransactionStatus, TransactionType } from '../models/transaction.model';
 import User, { UserRole } from '../models/user.model';
 import Voucher, { VoucherStatus } from '../models/voucher.model';
 import Wallet from '../models/wallet.model';
@@ -17,6 +17,8 @@ export default class PaymentService {
 		@Inject(Wallet.name) private walletModel: ModelClass<Wallet>,
 
 		@Inject(User.name) private userModel: ModelClass<User>,
+
+		@Inject(Transaction.name) private transactionModel: ModelClass<Transaction>,
 
 		private transactionService: TransactionService,
 
@@ -34,10 +36,7 @@ export default class PaymentService {
 			throw new HttpError(400, `The receiver is not merchant`);
 
 		// check exist user
-		const { senderWallet, receiverWallet } = await this.transactionService.checkAccountsExist(
-			senderId,
-			receiverId
-		);
+		const { senderWallet } = await this.transactionService.checkAccountsExist(senderId, receiverId);
 
 		// use voucher
 
@@ -79,14 +78,21 @@ export default class PaymentService {
 			charge: chargeFee,
 			type: TransactionType.PAYMENT_VOUCHER,
 		});
-		if (voucherData) {
-			voucherData.usedBy = voucherData.usedBy ? [...voucherData.usedBy, senderId] : [senderId];
-			await voucherData.$query().patch();
+
+		try {
+			await this.transactionModel.transaction(async (trx) => {
+				if (voucherData) {
+					voucherData.usedBy = voucherData.usedBy ? [...voucherData.usedBy, senderId] : [senderId];
+					await voucherData.$query(trx).patch();
+				}
+
+				await this.transactionService.startProcess(newTransaction, undefined, trx);
+
+				//TODO update status voucher
+			});
+		} catch (err) {
+			throw new HttpError(400, 'Can not pay');
 		}
-
-		this.transactionService.startProcess(newTransaction);
-
-		//TODO update status voucher
 
 		return newTransaction;
 	}

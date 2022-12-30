@@ -1,3 +1,4 @@
+import { Transaction as ObjectionTransaction } from 'objection';
 import Transaction, { TransactionAction, TransactionStatus } from '../models/transaction.model';
 import Wallet from '../models/wallet.model';
 
@@ -6,7 +7,7 @@ export interface ITransferData {
 	receiverWallet: Wallet;
 	transactionData: Transaction;
 	action: TransactionAction;
-	trx?: Transaction;
+	trx?: ObjectionTransaction;
 }
 
 export interface ITransferSend {
@@ -27,12 +28,12 @@ export interface ITransferReceive {
 export interface IChangeStatus {
 	transaction: Transaction | string;
 	status: TransactionStatus;
-	trx?: Transaction;
+	trx?: ObjectionTransaction;
 }
 
 export interface ITransactionTranfer {
 	wallet: Wallet;
 	transactionData: Transaction;
 	isSend: boolean;
-	trx?: Transaction;
+	trx?: ObjectionTransaction;
 }

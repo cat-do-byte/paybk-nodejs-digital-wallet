@@ -1,7 +1,7 @@
-import { Authorized, Body, Get, JsonController, Post, UseBefore } from 'routing-controllers';
-import { requestContext } from '../common/context';
+import { Body, Get, JsonController, Post, UseBefore } from 'routing-controllers';
 import { SendMoneyDto } from '../dto/transfer/sendMoney.dto';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import Transaction from '../models/transaction.model';
 import { UserRole } from '../models/user.model';
 import TransferService from '../services/transfer.service';
 
@@ -11,7 +11,7 @@ export default class TransactionController {
 	constructor(private readonly transferService: TransferService) {}
 
 	@Post('/send')
-	async sendMoney(@Body() sendData: SendMoneyDto) {
+	async sendMoney(@Body() sendData: SendMoneyDto): Promise<Transaction> {
 		return await this.transferService.sendMoney(sendData);
 	}
 }

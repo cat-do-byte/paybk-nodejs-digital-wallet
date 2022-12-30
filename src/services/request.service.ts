@@ -40,7 +40,7 @@ export default class RequestService {
 		return result;
 	}
 
-	async confirm(transactionId: string) {
+	async confirm(transactionId: string): Promise<boolean> {
 		// check is who requested
 		const { userId } = requestContext.getStore() as IRequestContext;
 
@@ -59,7 +59,7 @@ export default class RequestService {
 		return true;
 	}
 
-	async reject(transactionId: string) {
+	async reject(transactionId: string): Promise<boolean> {
 		const { userId } = requestContext.getStore() as IRequestContext;
 
 		// check is who requested
@@ -75,7 +75,7 @@ export default class RequestService {
 		return true;
 	}
 
-	async cancel(transactionId: string) {
+	async cancel(transactionId: string): Promise<boolean> {
 		const { userId } = requestContext.getStore() as IRequestContext;
 
 		const transaction = await this.transactionService.getTransaction(transactionId);
