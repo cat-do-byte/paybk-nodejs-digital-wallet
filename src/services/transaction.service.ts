@@ -61,13 +61,13 @@ export default class TransactionService {
 
 		const transaction = await this.transactionModel.query().findById(id);
 		if (!transaction) throw new HttpError(404, `The transaction does not exist`);
-
 		try {
-			this.transactionModel.transaction((trx) => {
+			await this.transactionModel.transaction((trx) => {
 				return this.handleByTransactionTypes[type]({ transactionData: transaction, action, trx });
 			});
 		} catch (err) {
 			console.log('error transfer ::', err);
+			throw err;
 		}
 
 		return true;
@@ -104,6 +104,7 @@ export default class TransactionService {
 		const { sendAmount, senderId, receiverId } = transactionData;
 
 		const { senderWallet, receiverWallet } = await this.checkAccountsExist(senderId, receiverId);
+
 		if (senderWallet.balance < sendAmount)
 			throw new HttpError(400, `The balance is not enough to make the transaction`);
 
@@ -113,10 +114,10 @@ export default class TransactionService {
 			trx,
 		});
 
-		await this.doTransfer({ wallet: senderWallet, transactionData, isSend: true });
+		await this.doTransfer({ wallet: senderWallet, transactionData, isSend: true, trx });
 
 		// increment from receiver
-		await this.doTransfer({ wallet: receiverWallet, transactionData, isSend: false });
+		await this.doTransfer({ wallet: receiverWallet, transactionData, isSend: false, trx });
 
 		await this.changeStatus({
 			transaction: transactionData,
@@ -184,8 +185,12 @@ export default class TransactionService {
 		}
 	}
 
-	startProcess(transactionData: Transaction, action?: TransactionAction) {
-		this.transactionQueue.add(transactionData, action);
+	async startProcess(transactionData: Transaction, action?: TransactionAction) {
+		// push to queue ?? I dont think so ....
+		// this.transactionQueue.add(transactionData, action);
+
+		// process imediate
+		await this.process(transactionData, action);
 	}
 
 	async getTransaction(id: string) {
@@ -262,13 +267,13 @@ export default class TransactionService {
 	}
 
 	async doTransfer(transactionTransferData: ITransactionTranfer) {
-		const { transactionData, wallet, isSend } = transactionTransferData;
+		const { transactionData, wallet, isSend, trx } = transactionTransferData;
 
 		if (isSend) {
 			const { sendAmount, charge, senderId, id } = transactionData;
 
 			wallet.balance -= sendAmount;
-			await wallet.$query().patch();
+			await wallet.$query(trx).patch();
 
 			this.logTranferSend({
 				senderId,
@@ -281,7 +286,7 @@ export default class TransactionService {
 			const { receiveAmount, receiverId, id } = transactionData;
 
 			wallet.balance += receiveAmount;
-			await wallet.$query().patch();
+			await wallet.$query(trx).patch();
 
 			this.logTranferReceive({
 				receiverId,

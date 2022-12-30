@@ -50,18 +50,21 @@ export default class TransferService {
 		// check available balance for sender
 		if (senderWallet.balance < sendAmount)
 			throw new HttpError(400, `The balance is not enough to make the transaction`);
+		try {
+			const newTransaction = await this.transactionService.create({
+				senderId,
+				receiverId,
+				amount,
+				sendAmount,
+				receiveAmount,
+				charge: chargeFee,
+				type: TransactionType.TRANSFER,
+			});
 
-		const newTransaction = await this.transactionService.create({
-			senderId,
-			receiverId,
-			amount,
-			sendAmount,
-			receiveAmount,
-			charge: chargeFee,
-			type: TransactionType.TRANSFER,
-		});
-
-		this.transactionService.startProcess(newTransaction);
+			await this.transactionService.startProcess(newTransaction);
+		} catch (err) {
+			throw err;
+		}
 
 		return true;
 	}
